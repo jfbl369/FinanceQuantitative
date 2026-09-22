@@ -1,0 +1,14 @@
+.env
+config/secrets.env
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.png
+screening_results.csv
+backtest_trades_*.csv
+backtest_*.json
+optimize_results.csv
+portfolio_state.json
+portfolio_state.json.tmp
+data/cache/

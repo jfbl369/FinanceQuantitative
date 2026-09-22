@@ -1,0 +1,75 @@
+# Seuils propres a la strategie pairs_cointegration.
+# Source UNIQUE de verite : aucun fichier de cette strategie ne doit
+# redefinir un seuil en dur, tous le lisent d'ici (via signals.py).
+
+zscore:
+  entry: 2.0    # on entre quand le spread s'ecarte de 2 ecarts-types
+  exit: 0.5     # on sort quand il est revenu pres de sa moyenne
+  stop: 4.0     # au-dela, on considere que la relation a casse
+  # Choisi via optimize.py sur CRV/SUSHI : z_stop grimpe de facon monotone
+  # jusqu'au bord de la grille testee (3.0->4.0), donc pas un plateau
+  # confirme -- mais 4.0 domine nettement 3.5 sur ce pair (moins de stops
+  # prematures, meilleur win rate). A retester si un stop plus large
+  # (4.5+) est un jour ajoute a la grille.
+  window_bars: 720  # 24 * 30 : z-score roulant sur 30 jours en 1h
+
+screening:
+  adf_nonstationary_min_pvalue: 0.05  # au-dessus = non stationnaire = OK
+  coint_max_pvalue: 0.05              # en-dessous = cointegre = OK
+  half_life_min_hours: 2.0            # trop rapide = bruit de microstructure
+  half_life_max_hours: 240.0          # trop lent = capital immobilise 10 jours
+  stability_window_bars: 720          # 30 jours, pour la stabilite du beta
+
+market:
+  timeframe: "1h"
+  # Max reel disponible pour CRV/SUSHI (les deux cotes sur Binance depuis
+  # 2020) : ~5.9 ans. Demander plus que ce qui existe ne casse rien,
+  # get_ohlcv() recupere juste tout depuis la premiere bougie disponible.
+  history_days: 2200
+
+costs:
+  # 4 executions par aller-retour complet (2 jambes x ouverture+fermeture).
+  # fee_per_execution_pct est un fait exchange, pas un choix de strategie :
+  # il vit dans config/settings.yaml (execution.fee_per_execution_pct),
+  # une seule fois. Ici seulement la consequence propre a cette strategie
+  # a 2 jambes : 4 x 0.10% = 0.40%.
+  cost_roundtrip_pct: 0.40
+
+sizing:
+  notional_per_leg: 10000.0
+  # false = dollar-neutral : notional sur A, notional sur B.
+  # true  = beta-neutral   : notional sur A, notional x beta sur B.
+  beta_hedged: false
+
+# Couples testes, ecrits a la main. Pas de scan de l'univers.
+#
+# Les 6 premiers (L1 majors) sont tous rejetes sur 365j/1h : correles
+# (meme beta crypto global) mais pas cointegres (pas d'ancrage relatif
+# stable, chaque L1 a son propre narratif). Ajoutes ensuite : des
+# couples ou une vraie relation d'equilibre est plus plausible.
+pairs:
+  # --- L1 majors (bloc d'origine, tous rejetes a ce jour) --------------
+  - ["ETH/USDT", "SOL/USDT"]
+  - ["ETH/USDT", "BNB/USDT"]
+  - ["SOL/USDT", "AVAX/USDT"]
+  - ["BNB/USDT", "SOL/USDT"]
+  - ["AVAX/USDT", "DOT/USDT"]
+  - ["ETH/USDT", "AVAX/USDT"]
+
+  # --- wrapped vs natif : quasi le meme actif, peg arbitre en continu --
+  - ["WBTC/USDT", "BTC/USDT"]
+
+  # --- L2 / staking vs leur L1 (ETH) -----------------------------------
+  - ["ARB/USDT", "ETH/USDT"]
+  - ["OP/USDT", "ETH/USDT"]
+  - ["POL/USDT", "ETH/USDT"]
+  - ["LDO/USDT", "ETH/USDT"]
+
+  # --- DeFi blue chips, driver sectoriel commun -------------------------
+  - ["UNI/USDT", "AAVE/USDT"]
+  - ["AAVE/USDT", "COMP/USDT"]
+  - ["CRV/USDT", "SUSHI/USDT"]
+
+  # --- stablecoins : cas limite, cointegration quasi garantie mais
+  # amplitude probablement mangee par les frais (voir net_amplitude_pct)
+  - ["USDC/USDT", "FDUSD/USDT"]

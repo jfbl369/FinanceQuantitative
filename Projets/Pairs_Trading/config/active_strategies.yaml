@@ -1,0 +1,6 @@
+# Liste des strategies que execution/bot.py doit faire tourner.
+# Desactiver une strategie = commenter/retirer son entree ici, rien d'autre.
+
+active:
+  - module: strategies.pairs_cointegration.strategy
+    class: PairsCointegrationStrategy

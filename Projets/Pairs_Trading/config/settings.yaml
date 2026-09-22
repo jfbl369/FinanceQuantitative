@@ -1,0 +1,27 @@
+# Configuration globale, independante de toute strategie.
+# Les seuils propres a une strategie vivent dans son propre config.yaml
+# (ex. strategies/pairs_cointegration/config.yaml), pas ici.
+
+execution:
+  # NE PAS MODIFIER sans demande explicite. false = les ordres partent
+  # reellement -- mais toujours sur le TESTNET Binance (execution/exchanges/
+  # binance_testnet.py), jamais le marche reel : aucun risque financier
+  # tant qu'aucun exchange "live" n'est cable.
+  dry_run: true
+  poll_seconds: 30
+  # Ce que l'exchange prelève par execution -- un fait, pas un choix de
+  # strategie. Binance spot taker VIP0 = 0.10%.
+  fee_per_execution_pct: 0.10
+
+risk:
+  # Plafond d'exposition brute (somme des deux jambes, toutes positions
+  # ouvertes confondues, toutes strategies confondues).
+  max_gross_exposure_usdt: 100000.0
+  # Nombre de positions ouvertes simultanement, tous instruments confondus.
+  max_concurrent_positions: 5
+  # Kill switch : au-dela de cette perte cumulee (valeur negative),
+  # RiskManager refuse toute nouvelle entree.
+  max_cumulative_loss_usdt: -5000.0
+
+dashboard:
+  history_size: 500
